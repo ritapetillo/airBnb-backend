@@ -1,0 +1,11 @@
+{
+  "name": "airbnb-clone",
+  "version": "1.0.0",
+  "description": "airbnb clone",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "RitaP",
+  "license": "ISC"
+}
