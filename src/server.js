@@ -1,7 +1,7 @@
 const express = require('express')
-const placesRouter = require('./services/places')
+const listingRoutes = require('./services/listings')
+const bookingRoutes = require('./services/bookings')
 const server = express()
-const placesRoutes = require('./services/places')
 const mongoose = require('mongoose')
 const  error_handler = require('node-error-handler');
 
@@ -10,7 +10,9 @@ const  error_handler = require('node-error-handler');
 mongoose.connect(process.env.MONGO_URI,{useNewUrlParser: true,useUnifiedTopology: true}).then(()=>console.log('connected to mongo'))
 
 server.use(express.json())
-server.use('/places',placesRoutes)
+server.use('/listings',listingRoutes)
+server.use('/bookings',bookingRoutes)
+
 
 server.use(error_handler({ log: true, debug: true }));
 
