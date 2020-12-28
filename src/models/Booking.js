@@ -5,6 +5,8 @@ const BookingSchema = new mongoose.Schema({
 
 listing:{ type: Schema.Types.ObjectId, ref: 'listings' },
 guest:{ type: Schema.Types.ObjectId, ref: 'users' },
+reviewFromGuest:{ type: Schema.Types.ObjectId, ref: 'reviews' },
+reviewFromHost:{ type: Schema.Types.ObjectId, ref: 'reviews' },
 checkin:Date,
 checkout:Date,
 totalAmount:Number,

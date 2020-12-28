@@ -15,7 +15,7 @@ description:String,
 images:Array,
 rate:Number,
 host:{ type: Schema.Types.ObjectId, ref: 'users' },
-bookings:{ type: Schema.Types.ObjectId, ref: 'bookings' },
+// bookings:{ type: Schema.Types.ObjectId, ref: 'bookings' },
 createdAt:Date,
 updatedAt:Date,
 reviews:[{ type: Schema.Types.ObjectId, ref: 'reviews' }]

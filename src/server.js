@@ -2,10 +2,13 @@ const express = require('express')
 const listingRoutes = require('./services/listings')
 const bookingRoutes = require('./services/bookings')
 const userRoutes = require('./services/users')
+const reviewsRoutes = require('./services/reviews')
+
 
 const server = express()
 const mongoose = require('mongoose')
 const  error_handler = require('node-error-handler');
+const reviewsRouter = require('./services/reviews')
 
 
 //connect to database
@@ -15,6 +18,8 @@ server.use(express.json())
 server.use('/listings',listingRoutes)
 server.use('/bookings',bookingRoutes)
 server.use('/users',userRoutes)
+server.use('/reviews',reviewsRouter)
+
 
 
 

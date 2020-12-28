@@ -47,4 +47,19 @@ res.send(sentUser)
     }
 })
 
+userRouter.delete('/:id',async(req,res,next)=>{
+    const {id} = req.params
+    try{
+   
+const userDeleted = await User.findByIdAndDelete(id)
+res.send(userDeleted)
+    
+
+    } catch(err){
+        const error = new Error ('there is a probelm deleting a new user')
+        error.httpStatus = 404
+        next(error)
+    }
+})
+
 module.exports = userRouter

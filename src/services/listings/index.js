@@ -1,11 +1,13 @@
 const express = require('express')
 const Listing = require('../../models/Listing')
+const Booking = require('../../models/Booking')
+
 const listingRouter = express.Router()
 const Post = require('../../models/Listing')
 
 listingRouter.get('/',async(req,res,next)=>{
     try{
-        const posts = await Post.find()
+        const posts = await Post.find().populate('host')
         res.send(posts)
 
     } catch(err){
@@ -84,6 +86,19 @@ listingRouter.delete('/:id',async(req,res,next)=>{
     }
 })
 
+ //GET /listings/:id/bookings
+ listingRouter.get('/:id/bookings',async(req,res,next)=>{
+    try{
+    const {id} = req.params;
+    const bookings = await Booking.find({listing:id})
+    res.send(bookings)
+
+    } catch(err){
+        const  error = new  Error('There is an error finding the booking for this listing');
+        error.code = 404;
+        next(error);
+    }
+})
 
 
 module.exports = listingRouter
