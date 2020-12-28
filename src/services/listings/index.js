@@ -69,16 +69,20 @@ res.send(editedListing)
 })
 
 // DELETE /listings/:id
-//delete existing listing by id
+//delete existing listing by id (or all id id===all)
 listingRouter.delete('/:id',async(req,res,next)=>{
     const {id} = req.params;
     try{
+        if(id === 'all'){
+      await Listing.deleteMany()
+        } else{
+
         const listingToDelete = await Listing.findByIdAndDelete(id)
          res.send({
              deleted:listingToDelete,
              meg:'correctly deleted'
          })
-
+        }
     } catch(err){
         const  error = new  Error('It was not possible to update the listing');
         error.code = 400;
@@ -87,6 +91,7 @@ listingRouter.delete('/:id',async(req,res,next)=>{
 })
 
  //GET /listings/:id/bookings
+ //get all bookings for a listing by listing id
  listingRouter.get('/:id/bookings',async(req,res,next)=>{
     try{
     const {id} = req.params;
@@ -99,6 +104,9 @@ listingRouter.delete('/:id',async(req,res,next)=>{
         next(error);
     }
 })
+
+
+
 
 
 module.exports = listingRouter

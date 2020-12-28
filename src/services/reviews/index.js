@@ -17,15 +17,15 @@ res.send(reviews)
     }
 })
 
-//POST /reviews/
-reviewsRouter.post('/',async(req,res,next)=>{
+//POST /reviews/gues
+reviewsRouter.post('/guest',async(req,res,next)=>{
     const {booking_id,author} = req.body
     try{
         //check if the user who leaves the reviews is the same that made the booking and that the user didn't leave a review for this booking yet
         const booking = await Booking.findById(booking_id)
         console.log(booking.reviewFromGuest)
         // console.log(author)
-        if(booking.guest != author || booking.reviewFromGuest != null){
+        if(booking.guest != author || booking.reviewFromGuest !== undefined){
             //if not, then don't let user to leave the review
             const error = new Error("You cannot review this listing")
             error.code = 400
@@ -38,11 +38,9 @@ reviewsRouter.post('/',async(req,res,next)=>{
                 updatedAt:Date.now()
             })
             const reviewLeft = await review.save()
-            console.log(reviewLeft._id)
             booking.reviewFromGuest = reviewLeft._id
             await booking.save()
-        console.log(booking)
-            res.send(reviewLeft)
+            res.send({review: reviewLeft, booking:booking})
 
         }
 
@@ -54,6 +52,40 @@ reviewsRouter.post('/',async(req,res,next)=>{
 })
 
 //POST /reviews/host
+reviewsRouter.post('/host',async(req,res,next)=>{
+    const {booking_id,author} = req.body
+    try{
+        //check if the user who leaves the reviews is the same that made the booking and that the user didn't leave a review for this booking yet
+        const booking = await Booking.findById(booking_id).populate('listing')
+        console.log(booking)
+        // console.log(author)
+        if(booking.listing.host != author || booking.reviewFromHost !== undefined){
+            //if not, then don't let user to leave the review
+            const error = new Error("You cannot review this listing")
+            error.code = 400
+            return next(error)
+        } else{
+            //if yes, then user can leave the review
+            const review = await new Review({
+                ...req.body,
+                createAt:Date.now(),
+                updatedAt:Date.now()
+            })
+            const reviewLeft = await review.save()
+            booking.reviewFromHost = reviewLeft._id
+            await booking.save()
+            res.send({review: reviewLeft, booking:booking})
+
+        }
+
+
+    } catch(err){
+        console.log(err)
+        next(err)
+    }
+})
+
+//PUT /reviews/:id
 reviewsRouter.put('/:id',async(req,res,next)=>{
     const {author} = req.body
     const {id} = req.params
@@ -92,6 +124,20 @@ reviewsRouter.put('/:id',async(req,res,next)=>{
     }
 })
 
+
+//DELETE /reviews/:id
+reviewsRouter.delete('/:id',async(req,res,next)=>{
+    const {id} = req.params
+    try{
+const reviewToDelete = await Review.findByIdAndDelete(id)
+
+res.send(reviewToDelete)
+
+    } catch(err){
+        console.log(err)
+        next(err)
+    }
+})
 //DELETE /reviews/all
 reviewsRouter.delete('/all',async(req,res,next)=>{
     try{
