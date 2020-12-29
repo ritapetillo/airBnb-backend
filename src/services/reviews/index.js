@@ -6,6 +6,7 @@ const Review = require('../../models/Review')
 const reviewsRouter = express.Router()
 
 //GET /reviews/
+//get all reviews
 reviewsRouter.get('/',async(req,res,next)=>{
     try{
 const reviews = await Review.find()
@@ -17,7 +18,8 @@ res.send(reviews)
     }
 })
 
-//POST /reviews/gues
+//POST /reviews/guest
+//guest post review for booking/listing
 reviewsRouter.post('/guest',async(req,res,next)=>{
     const {booking_id,author} = req.body
     try{
@@ -52,6 +54,7 @@ reviewsRouter.post('/guest',async(req,res,next)=>{
 })
 
 //POST /reviews/host
+//host post a review for the guest/booking
 reviewsRouter.post('/host',async(req,res,next)=>{
     const {booking_id,author} = req.body
     try{
@@ -86,6 +89,7 @@ reviewsRouter.post('/host',async(req,res,next)=>{
 })
 
 //PUT /reviews/:id
+//modify a review by id
 reviewsRouter.put('/:id',async(req,res,next)=>{
     const {author} = req.body
     const {id} = req.params
@@ -124,8 +128,21 @@ reviewsRouter.put('/:id',async(req,res,next)=>{
     }
 })
 
+//DELETE /reviews/all
+//delete all reviews
+reviewsRouter.delete('/all',async(req,res,next)=>{
+    try{
+const reviewsToDelete = await Review.deleteMany()
+res.send(reviewsToDelete)
+
+    } catch(err){
+        console.log(err)
+        next(err)
+    }
+})
 
 //DELETE /reviews/:id
+//delete a review by id
 reviewsRouter.delete('/:id',async(req,res,next)=>{
     const {id} = req.params
     try{
@@ -138,15 +155,5 @@ res.send(reviewToDelete)
         next(err)
     }
 })
-//DELETE /reviews/all
-reviewsRouter.delete('/all',async(req,res,next)=>{
-    try{
-const reviewsToDelete = await Review.deleteMany()
-res.send(reviewsToDelete)
 
-    } catch(err){
-        console.log(err)
-        next(err)
-    }
-})
 module.exports = reviewsRouter

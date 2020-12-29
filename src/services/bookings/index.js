@@ -1,11 +1,12 @@
 const express = require('express')
 const Booking = require('../../models/Booking')
 const bookingRouter = express.Router()
+const auth = require('../../lib/provateRoutes')
 
 
 //GET /bookings
 //get all bookings
-bookingRouter.get('/', async(req,res,next)=>{
+bookingRouter.get('/', auth,async(req,res,next)=>{
 try{
     const bookings = await Booking.find().populate('reviewFromGuest').populate('reviewFromHost')
     res.send(bookings)
@@ -72,7 +73,7 @@ bookingRouter.put('/:id', async(req,res,next)=>{
     })
 
 //DELETE /bookings/id
-//delete a booking by id
+//delete a booking by id or all
 bookingRouter.delete('/:id', async(req,res,next)=>{
     const {id} = req.params
     try{

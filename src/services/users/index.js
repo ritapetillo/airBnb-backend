@@ -3,7 +3,10 @@ const User = require('../../models/User')
 const validation = require ('../../lib/validationMiddleware')
 const schemas = require('../../lib/validationSchema')
 const userRouter = express.Router()
-
+const bcrypt = require('bcryptjs')
+const validationMiddleware = require('../../lib/validationMiddleware')
+const jwt = require('jsonwebtoken')
+const {TOKEN_SECRET} = process.env
 userRouter.get('/',async(req,res,next)=>{
     try{
     const users = await User.find()
@@ -16,21 +19,65 @@ userRouter.get('/',async(req,res,next)=>{
     }
 })
 
-userRouter.post('/',validation(schemas.userSchema),async(req,res,next)=>{
+//POST users/register 
+//register a new user
+userRouter.post('/register',validation(schemas.userSchema),async(req,res,next)=>{
     try{
-    const newUser = await new User({...req.body,
+        //check if email already exist
+        const userExist = await User.findOne({email:req.body.email})
+        if(userExist){
+            const err = new Error('user already exists')
+            err.code = 400
+            next(err)  
+        }
+        //if user email doesn't exist, create user
+
+        //hash password
+        const salt = await bcrypt.genSalt()
+        const password = await bcrypt.hash(req.body.password,salt)
+    const newUser = await new User({...req.body,password,
     createdAt:Date.now(),
 updatedAt:Date.now()})
 const sentUser = await newUser.save()
-res.send(sentUser)
+res.send({userId:sentUser._id, username:sentUser.email})
     
 
     } catch(err){
+        console.log(err)
         const error = new Error ('there is a probelm creating a new user')
         error.httpStatus = 404
         next(error)
     }
 })
+
+
+//POST /users/login
+//login user
+userRouter.post('/login',validationMiddleware(schemas.loginSchema),async(req,res,next)=>{
+    const {email,password} = req.body
+    try{
+        const user = await User.findOne({email})
+        //verify that there is a user with that email
+        if(!user) {
+            const error = new Error('Username or password is wrong')
+        error.code = 400
+        next(error)
+        }
+        //if the user exist, then verify password
+        const validPass = await bcrypt.compare(password,user.password)
+        if(validPass){
+            const token = jwt.sign({id:user._id},TOKEN_SECRET)
+            res.header('auth-token',token).send(token)
+        }  else next(new Error('Username or password is wrong'))      
+
+    }catch(err){
+        console.log(err)
+        const error = new Error('Login failed')
+        error.code = 400
+        next(error)
+    }
+})
+
 userRouter.put('/:id',validation(schemas.userSchema),async(req,res,next)=>{
     const {id} = req.params
     try{
@@ -61,5 +108,7 @@ res.send(userDeleted)
         next(error)
     }
 })
+
+
 
 module.exports = userRouter

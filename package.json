@@ -10,9 +10,11 @@
   "author": "RitaP",
   "license": "ISC",
   "dependencies": {
+    "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "express": "^4.17.1",
     "joi": "^17.3.0",
+    "jsonwebtoken": "^8.5.1",
     "mongoose": "^5.11.8",
     "node-error-handler": "^1.1.14"
   },
