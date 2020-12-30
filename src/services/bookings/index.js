@@ -1,5 +1,6 @@
 const express = require('express')
 const Booking = require('../../models/Booking')
+const User = require('../../models/User')
 const bookingRouter = express.Router()
 const auth = require('../../lib/provateRoutes')
 
