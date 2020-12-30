@@ -8,6 +8,7 @@ const multer = require('multer')
 const cloudinary = require('../../lib/cloudinary')
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 let nodeGeocoder = require('node-geocoder');
+const haversine = require('haversine-distance')
 let options = {
     provider: 'openstreetmap'
   };
@@ -65,12 +66,18 @@ if (req.file && req.file.path) {// if only one image uploaded
 };
  const {street,city,state,country,zip} = req.body
     try{
-        const address = await geoCoder.geocode(`${street} ${city} ${zip} ${state} ${country} `)
+       let address = await geoCoder.geocode(`${street} ${city} ${zip} ${state} ${country} `)
+            const location = {
+                type: "Point",
+                coordinates: [address[0].longitude,address[0].latitude]}
+            
         const newListing = new Listing({
             ...req.body,
+            address,
+            location,
             images:imagesUris,
             host:req.user.id,
-            address,
+            location:address,
             createdAt:Date.now(),
             updatedAt:Date.now()
         })
@@ -141,11 +148,34 @@ listingRouter.delete('/:id',async(req,res,next)=>{
 
 listingRouter.get('/search/city',async(req,res,next)=>{
     try{
-        const result = await geoCoder.geocode('18041 biscayne blvd aventura florida 33160')
-        console.log(result[0].latitude)
-        res.send(result)
+        const result = await geoCoder.geocode(req.query.city)
+        console.log(req.query.city)
+        const lat = result[0].latitude
+        const long = result[0].longitude
+        const cords1 = [long,lat]
+        console.log(lat)
+        let results = await Listing.find()
+        results = await results.filter(result => result.address)
+        results = results.filter(loc=> haversine(cords1,[loc.address[0].longitude,loc.address[0].latitude]) < 40000)
+        // const results = await Listing.find({
+        //     location:
+        //     {
+        //         $near:
+        //       {
+        //         $geometry:
+        //         {
+        //           type: "Point",
+        //           coordinates: [long, lat]
+        //         },
+        //         $maxDistance: 600000
+        //       }
+        //     }
+        //   })
+        
+        res.send(results)
      
     }catch(err){
+        console.log(err)
         next(err)
     }
 })

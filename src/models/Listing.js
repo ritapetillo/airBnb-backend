@@ -4,7 +4,10 @@ const Schema = mongoose.Schema
 const ListingSchema = new mongoose.Schema({
 
 name: String,
-location:Object,
+location:{
+    type: { type: String },
+    coordinates: []
+   },
 type:String,
 address:Object,
 guests:Number,
@@ -24,5 +27,8 @@ reviews:[{ type: Schema.Types.ObjectId, ref: 'reviews' }]
 
 
 })
+
+ListingSchema.index({ location: "2d" });
+
 
 module.exports = mongoose.model('listings',ListingSchema)
