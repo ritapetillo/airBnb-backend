@@ -9,6 +9,8 @@ const cloudinary = require('../../lib/cloudinary')
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 let nodeGeocoder = require('node-geocoder');
 const haversine = require('haversine-distance')
+const moment = require('moment')
+const bookingRouter = require('../bookings')
 let options = {
     provider: 'openstreetmap'
   };
@@ -149,28 +151,12 @@ listingRouter.delete('/:id',async(req,res,next)=>{
 listingRouter.get('/search/city',async(req,res,next)=>{
     try{
         const result = await geoCoder.geocode(req.query.city)
-        console.log(req.query.city)
         const lat = result[0].latitude
         const long = result[0].longitude
         const cords1 = [long,lat]
-        console.log(lat)
         let results = await Listing.find()
         results = await results.filter(result => result.address)
         results = results.filter(loc=> haversine(cords1,[loc.address[0].longitude,loc.address[0].latitude]) < 40000)
-        // const results = await Listing.find({
-        //     location:
-        //     {
-        //         $near:
-        //       {
-        //         $geometry:
-        //         {
-        //           type: "Point",
-        //           coordinates: [long, lat]
-        //         },
-        //         $maxDistance: 600000
-        //       }
-        //     }
-        //   })
         
         res.send(results)
      
@@ -181,7 +167,31 @@ listingRouter.get('/search/city',async(req,res,next)=>{
 })
 
 
+listingRouter.get('/search/results',async(req,res,next)=>{
+    try{
+        const checkin = await moment(req.query.checkin)
+        const checkout = await moment(req.query.checkout)
+        
+        const listings = await Listing.find().populate('bookings')
+        let filterList = listings
+        if(req.query.city){
 
+        const coord = await geoCoder.geocode(req.query.city)
+        const lat = coord[0].latitude
+        const long = coord[0].longitude
+        const cords1 = [long,lat]
+       filterList = await listings.filter(result => result.address)
+        filterList = filterList.filter(loc=> haversine(cords1,[loc.address[0].longitude,loc.address[0].latitude]) < 40000)
+        }
+       filterList = filterList.filter(listing=> listing.bookings.length == ""  || listing.bookings.some(booking=> !moment(checkin).isBetween(booking.checkin,booking.checkout) && !moment(checkout).isBetween(booking.checkin,booking.checkout)
+        ) )
+        res.send(filterList)
+     
+    }catch(err){
+        console.log(err)
+        next(err)
+    }
+})
 
 
 module.exports = listingRouter

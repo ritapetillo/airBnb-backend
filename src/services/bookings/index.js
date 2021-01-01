@@ -3,6 +3,7 @@ const Booking = require('../../models/Booking')
 const User = require('../../models/User')
 const bookingRouter = express.Router()
 const auth = require('../../lib/provateRoutes')
+const Listing = require('../../models/Listing')
 
 
 //GET /bookings
@@ -45,8 +46,12 @@ bookingRouter.post('/', async(req,res,next)=>{
             updatedAt:Date.now()
         })
         await newBooking.save()
+        const listing = await Listing.findById(newBooking.listing)
+        await listing.bookings.push(newBooking._id)
+        await listing.save()
         res.send(newBooking)
     } catch(err){
+console.log(err)
         const  error = new  Error('It was not possible to create a new booking');
         error.code = 400;
         next(error);
