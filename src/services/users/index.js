@@ -4,6 +4,7 @@ const validation = require ('../../lib/validationMiddleware')
 const schemas = require('../../lib/validationSchema')
 const userRouter = express.Router()
 const bcrypt = require('bcryptjs')
+const auth = require('../../lib/privateRoutes')
 const validationMiddleware = require('../../lib/validationMiddleware')
 const jwt = require('jsonwebtoken')
 const {TOKEN_SECRET} = process.env
@@ -14,6 +15,19 @@ userRouter.get('/',async(req,res,next)=>{
 
     } catch(err){
         const error = new Error ('there is a probelm finding users')
+        error.httpStatus = 404
+        next(error)
+    }
+})
+
+userRouter.get('/me',auth,async(req,res,next)=>{
+const {id} = req.user
+    try{
+    const user = await User.findById(id)
+    res.send(user)
+
+    } catch(err){
+        const error = new Error ('there is a probelm finding user')
         error.httpStatus = 404
         next(error)
     }
@@ -108,6 +122,9 @@ res.send(userDeleted)
         next(error)
     }
 })
+
+
+
 
 
 
