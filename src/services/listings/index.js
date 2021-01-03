@@ -49,6 +49,7 @@ listingRouter.get('/:id',async(req,res,next)=>{
     res.send(listing)
 
     } catch(err){
+        console.log(err)
         const  error = new  Error('Listing not found');
         error.code = 404;
         next(error);
@@ -69,17 +70,14 @@ if (req.file && req.file.path) {// if only one image uploaded
  const {street,city,state,country,zip} = req.body
     try{
        let address = await geoCoder.geocode(`${street} ${city} ${zip} ${state} ${country} `)
-            const location = {
-                type: "Point",
-                coordinates: [address[0].longitude,address[0].latitude]}
-            
+       let amenities = await req.body.amenities.split(',')
+           
         const newListing = new Listing({
             ...req.body,
             address,
-            location,
             images:imagesUris,
+            amenities,
             host:req.user.id,
-            location:address,
             createdAt:Date.now(),
             updatedAt:Date.now()
         })
@@ -93,18 +91,33 @@ res.send(newListing)
 
 // PUT /listings/:id
 //edit existing listing by id
-listingRouter.put('/:id',async(req,res,next)=>{
+listingRouter.put('/:id',auth,parser.array('images'),async(req,res,next)=>{
     const {id} = req.params;
+    const imagesUris = []
+if(req.files){
+    const files = req.files
+    files.map(file=>imagesUris.push(file.path))
+}
+if (req.file && req.file.path) {// if only one image uploaded
+    imagesUris = req.file.path; // add the single  
+};
+ const {street,city,state,country,zip} = req.body
     try{
+    let address = await geoCoder.geocode(`${street} ${city} ${zip} ${state} ${country} `)
+    let amenities = await req.body.amenities.split(',')
         const editedListing = {
             ...req.body,
-            createdAt:Date.now(),
+            address,
+            images:imagesUris,
+            amenities,
+            host:req.user.id,
             updatedAt:Date.now()
         }
         const listingToEdit = await Listing.findByIdAndUpdate(id,editedListing)
-res.send(editedListing)
+res.send({edited:listingToEdit._id,updatedAt:listingToEdit.updatedAt})
 
     } catch(err){
+        console.log(err)
         const  error = new  Error('It was not possible to update the listing');
         error.code = 400;
         next(error);
@@ -118,12 +131,13 @@ listingRouter.delete('/:id',async(req,res,next)=>{
     try{
         if(id === 'all'){
       await Listing.deleteMany()
+      res.send({msg:'deleted all'})
         } else{
 
         const listingToDelete = await Listing.findByIdAndDelete(id)
          res.send({
              deleted:listingToDelete,
-             meg:'correctly deleted'
+             msg:'correctly deleted'
          })
         }
     } catch(err){
@@ -169,13 +183,12 @@ listingRouter.get('/search/city',async(req,res,next)=>{
 
 listingRouter.get('/search/results',async(req,res,next)=>{
     try{
-        const checkin = await moment(req.query.checkin)
-        const checkout = await moment(req.query.checkout)
-        
+        const checkin = req.query.checkin && await moment(req.query.checkin)
+        const checkout =req.query.checkout && await moment(req.query.checkout)
         const listings = await Listing.find().populate('bookings')
         let filterList = listings
-        if(req.query.city){
 
+        if(req.query.city){
         const coord = await geoCoder.geocode(req.query.city)
         const lat = coord[0].latitude
         const long = coord[0].longitude
@@ -183,8 +196,9 @@ listingRouter.get('/search/results',async(req,res,next)=>{
        filterList = await listings.filter(result => result.address)
         filterList = filterList.filter(loc=> haversine(cords1,[loc.address[0].longitude,loc.address[0].latitude]) < 40000)
         }
-       filterList = filterList.filter(listing=> listing.bookings.length == ""  || listing.bookings.some(booking=> !moment(checkin).isBetween(booking.checkin,booking.checkout) && !moment(checkout).isBetween(booking.checkin,booking.checkout)
-        ) )
+        if(req.query.checkin && req.query.checkout)
+     {  filterList = filterList.filter(listing=> listing.bookings.length == ""  || listing.bookings.some(booking=> !moment(checkin).isBetween(booking.checkin,booking.checkout) && !moment(checkout).isBetween(booking.checkin,booking.checkout)
+        ) )}
         res.send(filterList)
      
     }catch(err){

@@ -4,12 +4,11 @@ const Schema = mongoose.Schema
 const ListingSchema = new mongoose.Schema({
 
 name: String,
-location:{
-    type: { type: String },
-    coordinates: []
+address:{
+    type: Object,
+    default:{}
    },
 type:String,
-address:Object,
 guests:Number,
 bedrooms: Number,
 beds:Number,
