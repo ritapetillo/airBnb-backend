@@ -185,6 +185,7 @@ listingRouter.get('/search/results',async(req,res,next)=>{
     try{
         const checkin = req.query.checkin && await moment(req.query.checkin)
         const checkout =req.query.checkout && await moment(req.query.checkout)
+
         const listings = await Listing.find().populate('bookings')
         let filterList = listings
 
@@ -199,6 +200,12 @@ listingRouter.get('/search/results',async(req,res,next)=>{
         if(req.query.checkin && req.query.checkout)
      {  filterList = filterList.filter(listing=> listing.bookings.length == ""  || listing.bookings.some(booking=> !moment(checkin).isBetween(booking.checkin,booking.checkout) && !moment(checkout).isBetween(booking.checkin,booking.checkout)
         ) )}
+
+        if(req.query.guests){
+            console.log(req.query.guests)
+            filterList = filterList.filter(listing=>listing.guests >= req.query.guests)
+        }
+        console.log(filterList)
         res.send(filterList)
      
     }catch(err){

@@ -2,7 +2,6 @@ const jwt = require('jsonwebtoken')
 
 const auth = async (req,res,next)=>{
     const token = req.header('auth-token')
-    console.log(token)
     if(!token){
         const error = new Error('Access Denied')
         error.code = 401
@@ -10,7 +9,6 @@ const auth = async (req,res,next)=>{
     } else{ 
         try{
             const verified  = await jwt.verify(token,process.env.TOKEN_SECRET )
-            console.log(verified)
             req.user = verified
             next()
         

@@ -13,6 +13,7 @@ const schemas = {
     password:Joi.string().min(6).required(),
   }) 
 
+
   
 }; 
 module.exports = schemas;

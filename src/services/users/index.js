@@ -7,7 +7,23 @@ const bcrypt = require('bcryptjs')
 const auth = require('../../lib/privateRoutes')
 const validationMiddleware = require('../../lib/validationMiddleware')
 const jwt = require('jsonwebtoken')
+const multer = require('multer')
+const cloudinary = require('../../lib/cloudinary')
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const {TOKEN_SECRET} = process.env
+
+const storage = new CloudinaryStorage({
+    cloudinary: cloudinary,
+    params: {
+      folder: 'users',
+    //   format: async (req, file) => 'png', // supports promises as well
+    //   public_id: (req, file) => 'computed-filename-using-request',
+    },
+  });
+   
+  const parser = multer({ storage: storage });
+
+
 userRouter.get('/',async(req,res,next)=>{
     try{
     const users = await User.find()
@@ -49,6 +65,7 @@ userRouter.post('/register',validation(schemas.userSchema),async(req,res,next)=>
         //hash password
         const salt = await bcrypt.genSalt()
         const password = await bcrypt.hash(req.body.password,salt)
+
     const newUser = await new User({...req.body,password,
     createdAt:Date.now(),
 updatedAt:Date.now()})
@@ -64,6 +81,27 @@ res.send({userId:sentUser._id, username:sentUser.email})
     }
 })
 
+userRouter.post('/avatar/:id',parser.single('avatar'),async(req,res,next)=>{
+    let imageUris;
+    const {id} = req.params
+        //check if image exist
+        if (req.file && req.file.path) {// if only one image uploaded
+            imageUris = req.file.path; // add the single  
+        };
+        try{
+            const user = await User.findById(id)
+            const editedUser = {
+                ...user,
+                images:imageUris,
+                updateAt:Date.now()
+            }
+            user = await User.findByIdAndUpdate(id,editedUser)
+            res.send(user)   
+
+        }catch(err){
+            console.log(err)
+        }
+})
 
 //POST /users/login
 //login user
