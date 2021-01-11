@@ -20,6 +20,22 @@ bookingRouter.get("/", auth, async (req, res, next) => {
   }
 });
 
+//GET /bookings/all/me
+//get all booking by user id
+bookingRouter.get("/all/me", auth, async (req, res, next) => {
+  const { id } = req.params;
+  try {
+    const bookings = await Booking.find({ guest: req.user.id }).populate(
+      "listing"
+    );
+    res.send(bookings);
+  } catch (err) {
+    const error = new Error("It was not possible to find the booking");
+    error.code = 400;
+    next(error);
+  }
+});
+
 //GET /bookings/:id
 //get booking by booking id
 bookingRouter.get("/:id", async (req, res, next) => {
@@ -81,7 +97,7 @@ bookingRouter.put("/:id", async (req, res, next) => {
 bookingRouter.delete("/:id", async (req, res, next) => {
   const { id } = req.params;
   try {
-    if (id == -"all") {
+    if (id == "all") {
       await Booking.deleteMany();
       res.send("deleted all bookings");
     } else {
